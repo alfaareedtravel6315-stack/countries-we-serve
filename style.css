@@ -76,19 +76,9 @@ body {
 .country-card img {
   display: block;
   width: 100%;
-  height: 230px;
-  object-fit: cover;
-}
-
-.country-card h2 {
-  margin: 0;
-  padding: 18px 10px 8px;
-  color: #221668;
-  font-family: Arial, Helvetica, sans-serif;
-  font-size: 34px;
-  line-height: 1.15;
-  font-weight: 700;
-  text-align: center;
+  height: auto;
+  aspect-ratio: 500 / 408;
+  object-fit: contain;
 }
 
 @media (max-width: 900px) {
@@ -109,14 +99,6 @@ body {
   .country-card {
     flex-basis: 310px;
     width: 310px;
-  }
-
-  .country-card img {
-    height: 198px;
-  }
-
-  .country-card h2 {
-    font-size: 30px;
   }
 }
 
@@ -139,14 +121,4 @@ body {
     flex-basis: 285px;
     width: 285px;
   }
-
-  .country-card img {
-    height: 182px;
-  }
-
-  .country-card h2 {
-    font-size: 28px;
-    padding-top: 15px;
-  }
 }
-
