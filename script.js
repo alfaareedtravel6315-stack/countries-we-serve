@@ -21,7 +21,7 @@ document.addEventListener("DOMContentLoaded", () => {
   let isMoving = false;
 
   // Movement settings
-  const MOVE_TIME = 650;   // slow movement duration
+  const MOVE_TIME = 1200;   // slow movement duration
   const PAUSE_TIME = 1000; // pause after each step
 
   function measure() {
