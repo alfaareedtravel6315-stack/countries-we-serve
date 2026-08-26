@@ -4,53 +4,84 @@ document.addEventListener("DOMContentLoaded", () => {
 
   if (!track || !originalSet) return;
 
+  // Create duplicate set for continuous looping
   const duplicateSet = originalSet.cloneNode(true);
   duplicateSet.removeAttribute("id");
+
+  // Remove the extra left padding at the duplicate boundary.
+  // This keeps the gap between the last original card
+  // and the first duplicate card equal to the normal card gap.
+  duplicateSet.style.marginLeft = "-28px";
+
   track.appendChild(duplicateSet);
 
-  let currentPosition = 0;
+  let position = 0;
   let stepDistance = 0;
-  let moving = false;
+  let loopDistance = 0;
+  let isMoving = false;
 
-  const MOVE_DISTANCE = 1;
-  const MOVE_SPEED = 4;
-  const PAUSE_TIME = 900;
+  // Movement settings
+  const MOVE_TIME = 650;   // slow movement duration
+  const PAUSE_TIME = 1000; // pause after each step
 
   function measure() {
-    stepDistance = originalSet.scrollWidth / 6;
+    const firstCard = originalSet.querySelector(".country-card");
+
+    if (!firstCard) return;
+
+    const cardWidth = firstCard.getBoundingClientRect().width;
+
+    const setStyles = window.getComputedStyle(originalSet);
+    const gap = parseFloat(setStyles.columnGap || setStyles.gap || "0");
+
+    // One complete card + normal gap
+    stepDistance = cardWidth + gap;
+
+    // Six cards make one complete original set.
+    // Boundary correction removes the duplicated 28px padding.
+    loopDistance = originalSet.getBoundingClientRect().width - 28;
   }
 
-  function moveOneStep() {
-    if (moving || stepDistance <= 0) return;
+  function moveStep() {
+    if (isMoving || stepDistance <= 0) return;
 
-    moving = true;
+    isMoving = true;
 
-    const targetPosition = currentPosition + stepDistance;
-    const startPosition = currentPosition;
-    const duration = 450;
+    const startPosition = position;
+    const targetPosition = position + stepDistance;
+
     const startTime = performance.now();
 
     function animate(now) {
-      const progress = Math.min((now - startTime) / duration, 1);
+      const elapsed = now - startTime;
+      const progress = Math.min(elapsed / MOVE_TIME, 1);
 
-      currentPosition =
+      // Slow start + slow finish, then a definite stop.
+      const eased =
+        progress < 0.5
+          ? 2 * progress * progress
+          : 1 - Math.pow(-2 * progress + 2, 2) / 2;
+
+      position =
         startPosition +
-        (targetPosition - startPosition) * progress;
+        (targetPosition - startPosition) * eased;
 
-      if (currentPosition >= originalSet.scrollWidth) {
-        currentPosition -= originalSet.scrollWidth;
-        track.style.transform = `translate3d(${-currentPosition}px, 0, 0)`;
-      } else {
-        track.style.transform = `translate3d(${-currentPosition}px, 0, 0)`;
+      // Seamless loop at the exact end of the six-card set
+      if (position >= loopDistance) {
+        position -= loopDistance;
       }
+
+      track.style.transform =
+        `translate3d(${-position}px, 0, 0)`;
 
       if (progress < 1) {
         requestAnimationFrame(animate);
       } else {
-        moving = false;
+        isMoving = false;
 
+        // Pause after every step
         setTimeout(() => {
-          moveOneStep();
+          moveStep();
         }, PAUSE_TIME);
       }
     }
@@ -58,9 +89,10 @@ document.addEventListener("DOMContentLoaded", () => {
     requestAnimationFrame(animate);
   }
 
+  // Recalculate dimensions after images load
   window.addEventListener("load", () => {
     measure();
-    moveOneStep();
+    moveStep();
   });
 
   window.addEventListener("resize", () => {
@@ -72,7 +104,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   if (images.length === 0) {
     measure();
-    moveOneStep();
+    moveStep();
   } else {
     images.forEach((img) => {
       if (img.complete) {
@@ -85,7 +117,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
             if (loaded === images.length) {
               measure();
-              moveOneStep();
+              moveStep();
             }
           },
           { once: true }
@@ -95,7 +127,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     if (loaded === images.length) {
       measure();
-      moveOneStep();
+      moveStep();
     }
   }
 });
