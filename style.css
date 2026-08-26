@@ -1,0 +1,171 @@
+/* =========================================================
+   COUNTRIES WE SERVE — SIMPLE EDIT PANEL
+   Main font: ARIAL ONLY
+   ========================================================= */
+
+:root {
+  /* ===== TEXT — EDIT HERE ===== */
+  --heading-color: #221668;
+  --subheading-color: #434343;
+
+  /* ===== DARK BACKGROUND ===== */
+  --dark-heading-color: #ffffff;
+  --dark-subheading-color: #ffffff;
+
+  /* ===== TEXT SIZE ===== */
+  --heading-size: 30px;
+  --subheading-size: 11px;
+
+  /* ===== HEADING / SUBHEADING GAP ===== */
+  /* Minimum practical gap; increase only if needed. */
+  --heading-subheading-gap: 2px;
+  --heading-line-height: 1.15;
+  --subheading-line-height: 1.15;
+
+  /* ===== SPACE BELOW SUBHEADING ===== */
+  --heading-block-bottom-gap: 16px;
+
+  /* ===== SLIDER ===== */
+  --visible-cards: 4;
+  --card-gap: 10px;
+  --divider-width: 3px;
+  --divider-color: #800020;
+
+  /* ===== AUTO SLIDER ===== */
+  --slide-duration: 700ms;
+  --auto-slide-delay: 3000ms;
+}
+
+/* =========================================================
+   MAIN SECTION
+   Transparent background — NO white patch.
+   ========================================================= */
+
+.countries-section {
+  width: 100%;
+  max-width: 100%;
+  margin: 0;
+  padding: 0;
+  background: transparent;
+  font-family: Arial, sans-serif;
+  box-sizing: border-box;
+}
+
+.countries-section *,
+.countries-section *::before,
+.countries-section *::after {
+  box-sizing: border-box;
+}
+
+/* =========================================================
+   HEADING + SUBHEADING
+   ========================================================= */
+
+.countries-heading-block {
+  width: 100%;
+  margin: 0 0 var(--heading-block-bottom-gap) 0;
+  padding: 0;
+  text-align: center;
+}
+
+.countries-heading {
+  margin: 0;
+  padding: 0;
+  color: var(--heading-color);
+  font-family: Arial, sans-serif;
+  font-size: var(--heading-size);
+  font-weight: 700;
+  line-height: var(--heading-line-height);
+}
+
+.countries-subheading {
+  margin: var(--heading-subheading-gap) 0 0 0;
+  padding: 0;
+  color: var(--subheading-color);
+  font-family: Arial, sans-serif;
+  font-size: var(--subheading-size);
+  font-weight: 400;
+  line-height: var(--subheading-line-height);
+}
+
+/* =========================================================
+   COUNTRY SLIDER
+   ========================================================= */
+
+.countries-slider {
+  width: 100%;
+  margin: 0;
+  padding: 0;
+  background: transparent;
+  overflow: hidden;
+}
+
+.countries-viewport {
+  width: 100%;
+  overflow: hidden;
+  background: transparent;
+}
+
+.countries-track {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--card-gap);
+  width: max-content;
+  margin: 0;
+  padding: 0;
+  transform: translate3d(0, 0, 0);
+  will-change: transform;
+  transition: transform var(--slide-duration) ease;
+}
+
+.country-card {
+  position: relative;
+  flex: 0 0 calc(
+    (100vw - (var(--card-gap) * (var(--visible-cards) - 1))) / var(--visible-cards)
+  );
+  width: calc(
+    (100vw - (var(--card-gap) * (var(--visible-cards) - 1))) / var(--visible-cards)
+  );
+  max-width: 500px;
+  margin: 0;
+  padding: 0;
+  background: transparent;
+}
+
+.country-card:not(:last-child)::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  right: calc(var(--card-gap) / -2);
+  width: var(--divider-width);
+  height: 100%;
+  background: var(--divider-color);
+  pointer-events: none;
+}
+
+.country-card img {
+  display: block;
+  width: 100%;
+  height: auto;
+  aspect-ratio: 500 / 408;
+  object-fit: contain;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+/* =========================================================
+   DARK BACKGROUND SUPPORT
+   Transparent section remains transparent.
+   Only heading/subheading become white.
+   ========================================================= */
+
+@media (prefers-color-scheme: dark) {
+  .countries-heading {
+    color: var(--dark-heading-color);
+  }
+
+  .countries-subheading {
+    color: var(--dark-subheading-color);
+  }
+}
