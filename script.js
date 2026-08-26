@@ -1,84 +1,101 @@
-
 document.addEventListener("DOMContentLoaded", () => {
   const track = document.getElementById("carouselTrack");
   const originalSet = document.getElementById("carouselSet");
 
   if (!track || !originalSet) return;
 
-  // Create the second identical set so the carousel can loop continuously.
   const duplicateSet = originalSet.cloneNode(true);
   duplicateSet.removeAttribute("id");
   track.appendChild(duplicateSet);
 
-  let offset = 0;
-  let lastTime = performance.now();
-  let loopDistance = 0;
-  let running = true;
+  let currentPosition = 0;
+  let stepDistance = 0;
+  let moving = false;
 
-  const SPEED = 55; // pixels per second
+  const MOVE_DISTANCE = 1;
+  const MOVE_SPEED = 4;
+  const PAUSE_TIME = 900;
 
   function measure() {
-    const firstSetWidth = originalSet.getBoundingClientRect().width;
-    const styles = window.getComputedStyle(track);
-    const gap = parseFloat(styles.columnGap || styles.gap || "0");
-    loopDistance = firstSetWidth + gap;
+    stepDistance = originalSet.scrollWidth / 6;
   }
 
-  function animate(now) {
-    const delta = Math.min(now - lastTime, 50);
-    lastTime = now;
+  function moveOneStep() {
+    if (moving || stepDistance <= 0) return;
 
-    if (running && loopDistance > 0) {
-      offset += (SPEED * delta) / 1000;
+    moving = true;
 
-      // Reset exactly when the first complete set has passed.
-      // This prevents the white gap/jump seen in the previous version.
-      if (offset >= loopDistance) {
-        offset -= loopDistance;
+    const targetPosition = currentPosition + stepDistance;
+    const startPosition = currentPosition;
+    const duration = 450;
+    const startTime = performance.now();
+
+    function animate(now) {
+      const progress = Math.min((now - startTime) / duration, 1);
+
+      currentPosition =
+        startPosition +
+        (targetPosition - startPosition) * progress;
+
+      if (currentPosition >= originalSet.scrollWidth) {
+        currentPosition -= originalSet.scrollWidth;
+        track.style.transform = `translate3d(${-currentPosition}px, 0, 0)`;
+      } else {
+        track.style.transform = `translate3d(${-currentPosition}px, 0, 0)`;
       }
 
-      track.style.transform = `translate3d(${-offset}px, 0, 0)`;
+      if (progress < 1) {
+        requestAnimationFrame(animate);
+      } else {
+        moving = false;
+
+        setTimeout(() => {
+          moveOneStep();
+        }, PAUSE_TIME);
+      }
     }
 
     requestAnimationFrame(animate);
   }
 
-  // Re-measure after images/layout settle.
-  window.addEventListener("load", measure);
-  window.addEventListener("resize", measure);
+  window.addEventListener("load", () => {
+    measure();
+    moveOneStep();
+  });
+
+  window.addEventListener("resize", () => {
+    measure();
+  });
 
   const images = track.querySelectorAll("img");
   let loaded = 0;
 
   if (images.length === 0) {
     measure();
+    moveOneStep();
   } else {
     images.forEach((img) => {
       if (img.complete) {
         loaded++;
       } else {
-        img.addEventListener("load", () => {
-          loaded++;
-          if (loaded === images.length) measure();
-        }, { once: true });
+        img.addEventListener(
+          "load",
+          () => {
+            loaded++;
+
+            if (loaded === images.length) {
+              measure();
+              moveOneStep();
+            }
+          },
+          { once: true }
+        );
       }
     });
 
-    if (loaded === images.length) measure();
+    if (loaded === images.length) {
+      measure();
+      moveOneStep();
+    }
   }
-
-  // Pause while the mouse is over the carousel; resume when it leaves.
-  const windowEl = document.querySelector(".carousel-window");
-  if (windowEl) {
-    windowEl.addEventListener("mouseenter", () => {
-      running = false;
-    });
-
-    windowEl.addEventListener("mouseleave", () => {
-      running = true;
-      lastTime = performance.now();
-    });
-  }
-
-  requestAnimationFrame(animate);
 });
