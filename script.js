@@ -16,7 +16,7 @@ document.addEventListener("DOMContentLoaded", () => {
   let isMoving = false;
 
   // Premium step movement
-  const MOVE_TIME = 1100;
+  const MOVE_TIME = 2200;
   const PAUSE_TIME = 1400;
 
   function setupLayout() {
