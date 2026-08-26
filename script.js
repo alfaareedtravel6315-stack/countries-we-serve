@@ -1,81 +1,83 @@
-/* =========================================================
-   COUNTRIES WE SERVE — AUTO SLIDER
-   Sequence: Saudi → Dubai → Oman → Qatar → Kuwait → Bahrain
-   ========================================================= */
+document.addEventListener("DOMContentLoaded", () => {
+  const track = document.getElementById("carouselTrack");
+  const originalSet = document.getElementById("carouselSet");
 
-(function () {
-  "use strict";
+  if (!track || !originalSet) return;
 
-  const slider = document.querySelector("[data-slider]");
-  const track = document.querySelector("[data-track]");
+  // Create the second identical set so the carousel can loop continuously.
+  const duplicateSet = originalSet.cloneNode(true);
+  duplicateSet.removeAttribute("id");
+  track.appendChild(duplicateSet);
 
-  if (!slider || !track) return;
+  let offset = 0;
+  let lastTime = performance.now();
+  let loopDistance = 0;
+  let running = true;
 
-  const originalCards = Array.from(track.querySelectorAll(".country-card"));
-  if (originalCards.length <= 1) return;
+  const SPEED = 55; // pixels per second
 
-  let currentIndex = 0;
-  let timer = null;
-
-  function getCardStep() {
-    const firstCard = track.querySelector(".country-card");
-    if (!firstCard) return 0;
-
-    const cardWidth = firstCard.getBoundingClientRect().width;
+  function measure() {
+    const firstSetWidth = originalSet.getBoundingClientRect().width;
     const styles = window.getComputedStyle(track);
     const gap = parseFloat(styles.columnGap || styles.gap || "0");
-
-    return cardWidth + gap;
+    loopDistance = firstSetWidth + gap;
   }
 
-  function moveSlider() {
-    const step = getCardStep();
-    if (!step) return;
+  function animate(now) {
+    const delta = Math.min(now - lastTime, 50);
+    lastTime = now;
 
-    currentIndex += 1;
+    if (running && loopDistance > 0) {
+      offset += (SPEED * delta) / 1000;
 
-    if (currentIndex >= originalCards.length) {
-      track.style.transition = "none";
-      currentIndex = 0;
-      track.style.transform = "translate3d(0, 0, 0)";
+      // Reset exactly when the first complete set has passed.
+      // This prevents the white gap/jump seen in the previous version.
+      if (offset >= loopDistance) {
+        offset -= loopDistance;
+      }
 
-      requestAnimationFrame(() => {
-        requestAnimationFrame(() => {
-          track.style.transition = "";
-        });
-      });
-
-      return;
+      track.style.transform = `translate3d(${-offset}px, 0, 0)`;
     }
 
-    track.style.transform =
-      "translate3d(" + (-currentIndex * step) + "px, 0, 0)";
+    requestAnimationFrame(animate);
   }
 
-  function startSlider() {
-    stopSlider();
-    timer = window.setInterval(moveSlider, 3000);
-  }
+  // Re-measure after images/layout settle.
+  window.addEventListener("load", measure);
+  window.addEventListener("resize", measure);
 
-  function stopSlider() {
-    if (timer) {
-      window.clearInterval(timer);
-      timer = null;
-    }
-  }
+  const images = track.querySelectorAll("img");
+  let loaded = 0;
 
-  window.addEventListener("resize", function () {
-    track.style.transition = "none";
-    track.style.transform =
-      "translate3d(" + (-currentIndex * getCardStep()) + "px, 0, 0)";
-
-    requestAnimationFrame(() => {
-      track.style.transition = "";
+  if (images.length === 0) {
+    measure();
+  } else {
+    images.forEach((img) => {
+      if (img.complete) {
+        loaded++;
+      } else {
+        img.addEventListener("load", () => {
+          loaded++;
+          if (loaded === images.length) measure();
+        }, { once: true });
+      }
     });
-  });
 
-  slider.addEventListener("mouseenter", stopSlider);
-  slider.addEventListener("mouseleave", startSlider);
+    if (loaded === images.length) measure();
+  }
 
-  startSlider();
-})();
+  // Pause while the mouse is over the carousel; resume when it leaves.
+  const windowEl = document.querySelector(".carousel-window");
+  if (windowEl) {
+    windowEl.addEventListener("mouseenter", () => {
+      running = false;
+    });
+
+    windowEl.addEventListener("mouseleave", () => {
+      running = true;
+      lastTime = performance.now();
+    });
+  }
+
+  requestAnimationFrame(animate);
+});
